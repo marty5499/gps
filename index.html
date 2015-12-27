@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>HyProto App</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="http://marty5499.github.io/air-schools/bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
+  <link rel="import" href="http://marty5499.github.io/gps/bower_components/google-map/google-map.html">
+  <link rel="import" href="http://marty5499.github.io/gps/bower_components/google-map/google-map-marker.html">
+
+  <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+  <script src="https://code.jquery.com/jquery.min.js"></script>
+  <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+  <script src="https://webduino.io/components/webduino-js/dist/webduino-all.min.js"></script>
+  <script src="https://webduinoio.github.io/webduino-blockly/webduino-blockly.js"></script>
+  <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
+  <style>
+  .icon {
+    margin: 10px;
+    width: 64px;
+  }
+  .gmap {
+    height: 100vh;
+  }
+  .ui-title {
+    margin: 0.0em 10% 0.0em !important;
+  }
+  .ui-content {
+    height: 100vh;
+    padding: 0px;
+  }
+  body {
+    margin: 0;
+    height: 100vh;
+  }
+  </style>
+</head>
+
+<body>
+  <div id="initPage" data-role="page">
+    <div data-role="header" data-position="fixed" data-theme="b">
+      <h1>WiFi小車地圖位置</h1>
+    </div>
+    <div role="main" class="ui-content">
+      <google-map latitude="22.630080" longitude="120.343402" id="gmap" min-zoom="3" max-zoom="20" language="zh_tw" zoom="20" disabledefaultui="">
+      </google-map>
+    </div>
+  </div>
+  <script>
+  var deviceId = window.location.hash.substr(1);
+  var marker = false;
+  boardReady(deviceId, function(board) {
+    q = board;
+    board.samplingInterval = 20;
+    // init gps
+    //board.send([0xf0, 0x04, 0x0c, 0x00, 0x08, 0x09, 0xf7]);
+    //board.send([0xf0, 0x04, 0x0c, 0x01, 0xf7]);
+    //
+    board.on(webduino.BoardEvent.SYSEX_MESSAGE,
+      function(event) {
+        var msg = event.message;
+        // 0x04 , 0x0c , 0x03 receiver GPS data
+        if (msg[0] == 4 && msg[1] == 12 && msg[2] == 3) {
+          var latlng = GPSLocation(msg);
+          console.log('latlng:', latlng);
+          createMarker(latlng);
+        }
+      });
+    setInterval(function() {
+      board.send([0xf0, 0x04, 0x0c, 0x03, 0xf7]);
+    }, 5000);
+
+    function createMarker(latlng) {
+      gmap.latitude = latlng[0];
+      gmap.longitude = latlng[1];
+      if (!marker) {
+        marker = document.createElement('google-map-marker');
+        Polymer.dom(gmap).appendChild(marker);
+      }
+      marker.latitude = latlng[0];
+      marker.longitude = latlng[1];
+    }
+
+    function GPSLocation(msg) {
+      var idx = 0;
+      var latlng = ['', ''];
+      for (i = 3; i < msg.length; i++) {
+        var c = String.fromCharCode(msg[i]);
+        if (c === ',') {
+          idx++;
+        } else {
+          latlng[idx] += c;
+        }
+      }
+      return latlng;
+    }
+  });
+  </script>
+</body>
+
+</html>
