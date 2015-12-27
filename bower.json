@@ -1,0 +1,22 @@
+{
+  "name": "gps",
+  "homepage": "https://github.com/marty5499/gps",
+  "authors": [
+    "marty <marty.shu@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "~1.2.3",
+    "google-map": "GoogleWebComponents/google-map#~1.1.7"
+  }
+}
